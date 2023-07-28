@@ -1,0 +1,8 @@
+{
+  "../node_modules/nextra-theme-blog/dist/index.js -> react-cusdis": {
+    "id": "../node_modules/nextra-theme-blog/dist/index.js -> react-cusdis",
+    "files": [
+      "static/chunks/node_modules_react-cusdis_dist_ReactCusdis_js.js"
+    ]
+  }
+}
