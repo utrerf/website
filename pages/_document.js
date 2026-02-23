@@ -2,8 +2,8 @@ import { Html, Head, Main, NextScript } from 'next/document'
 
 export default function Document() {
   const meta = {
-    title: 'Francisco Utrera - Personal Website',
-    description: 'Lead Machine Learning Engineer.',
+    title: 'Francisco Utrera — Founding AI Engineer',
+    description: 'Founding AI Engineer building production LLM orchestration, RAG, and agentic systems at Embrace.ai.',
     image: 'https://assets.vercel.com/image/upload/q_auto/front/vercel/dps.png'
   }
 

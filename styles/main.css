@@ -60,6 +60,10 @@ img.next-image {
   color: #0074de;
 }
 
+:is(.dark) .prose a {
+  color: #79b8ff;
+}
+
 .nav-line .nav-link {
   color: #69778c;
 }

@@ -1,0 +1,111 @@
+---
+title: Designing RAG at Scale
+date: 2026/2/23
+description: From embeddings to reranking — how we built a production RAG system with contextual document enrichment, multi-stage retrieval, and autonomous knowledge gap detection.
+tag: rag, ai, engineering
+author: Francisco Utrera
+---
+
+RAG (Retrieval-Augmented Generation) is the most over-simplified concept in applied AI. Every tutorial shows you: chunk documents, embed them, store in a vector database, retrieve top-k, stuff into prompt. That gets you a demo. Production RAG for B2B customers with real documents — PDFs with tables, images, multi-language content, and constantly evolving knowledge bases — requires a fundamentally different architecture.
+
+At Embrace.ai, I designed and built the RAG system that powers our AI customer support platform. Here's what production RAG actually looks like.
+
+## The Retrieval Pipeline
+
+Our retrieval pipeline has four stages, each solving a different problem:
+
+### Stage 1: Embedding
+
+Every document chunk gets embedded using OpenAI's text-embedding-ada-002. The embeddings capture semantic meaning, so "how do I reset my password" and "I can't log in" land near each other in vector space.
+
+The embedding model choice matters less than you think. What matters more is what you embed — the chunk quality, the metadata you attach, and the context surrounding each chunk. We'll come back to this.
+
+### Stage 2: Vector Search with Overfetch
+
+We use Pinecone as our vector database. The key insight is **overfetch**: we retrieve 2x more candidates than we ultimately need. If we want the top 5 results, we fetch 10 from Pinecone.
+
+Why? Because vector similarity is a noisy signal. Two chunks can be close in embedding space but one might be from an outdated article, or from a different product, or might be a table of contents entry rather than actual content. Overfetching gives the next stage more candidates to work with.
+
+### Stage 3: Neural Reranking
+
+This is where the magic happens. We pass all overfetched candidates through Cohere's rerank models (rerank-english-v3.0 for English content, multilingual-v3.0 for everything else). The reranker scores each candidate against the original query using a cross-encoder — it sees the query and the document together, which captures relevance signals that independent embeddings miss.
+
+The reranker regularly reorders results in ways that matter. A chunk that was #8 by vector similarity might become #1 after reranking because the reranker understands the semantic relationship between the query and the content at a deeper level than cosine similarity over independent embeddings.
+
+### Stage 4: Metadata Hydration
+
+After reranking, we hydrate the surviving chunks with metadata from the knowledge management service: source document title, URL, last updated date, collection membership. This metadata flows through to the LLM response as citations, so the end user can click through to the source.
+
+## The Document Processing Pipeline
+
+Retrieval quality is capped by document quality. Garbage in, garbage out. Our document processing pipeline handles the full lifecycle from raw file to enriched, searchable chunks.
+
+### Multi-Format Extraction
+
+The extraction service handles PDFs, DOCX, images, and audio/video. For document files, we use the Unstructured API with intelligent strategy selection:
+
+- **Fast strategy**: for simple, text-heavy PDFs (< 50 pages, no complex tables)
+- **Hi-res strategy**: for PDFs with tables, images, or complex layouts
+- **OCR-only**: for scanned documents and images
+- **Multimodal**: converts pages to images and extracts via vision models
+
+The strategy selection is automatic, based on page count and content analysis. We also support a feature flag system (LaunchDarkly) so we can override extraction strategies per customer organization if their documents need special handling.
+
+For audio and video, we use AWS Transcribe with automatic language detection, then process the transcript like text.
+
+### Contextual Document Enrichment
+
+Raw extraction gives you text chunks, but production RAG needs more. Our enrichment pipeline processes every element type differently:
+
+- **Text**: cleaning, sanitization, normalization
+- **Tables**: Claude generates natural-language descriptions of table contents, so the table is searchable by its meaning, not just its cell values
+- **Images**: an informativeness filter removes decorative images (logos, backgrounds), then remaining images get image-to-text descriptions
+- **Code blocks, formulas, transcripts**: each handled with format-specific processing
+
+The enrichment runs in parallel batches (20 elements at a time, 60-second timeout per batch) on an ECS cluster that auto-scales from 1 to 128 tasks based on SQS queue depth. When a customer uploads 10,000 documents, the cluster scales up, processes everything, and scales back down.
+
+Every document also gets a summary generated by Gemini Flash. These summaries serve as an additional retrieval signal — sometimes the summary matches a query better than any individual chunk.
+
+## Chunking Strategy
+
+Chunking decisions have an outsized impact on retrieval quality. Our approach:
+
+**Element-aware chunking.** We don't blindly split on token count. The extraction pipeline produces typed elements (paragraph, table, heading, list, image, etc.), and the chunking respects element boundaries. A table is never split across chunks. A heading stays with its content.
+
+**Contextual elements.** Each chunk carries contextual metadata: the document title, section headings above it, and surrounding element types. When the LLM sees a chunk, it knows where in the document it came from.
+
+**Overlap.** Adjacent chunks share a configurable overlap window. This prevents information loss at chunk boundaries — if a relevant sentence straddles two chunks, the overlap ensures at least one chunk contains the full sentence.
+
+## Knowledge Gap Detection
+
+One of the more interesting systems I built sits downstream of RAG: autonomous knowledge gap detection and article generation.
+
+### How It Works
+
+1. **Gap evaluation**: After every AI response, we evaluate whether the response adequately answered the question or if there's a knowledge gap. This is algorithmic, not just keyword matching — it looks at response confidence signals, retrieval scores, and conversation outcome.
+
+2. **Semantic clustering**: Detected gaps are embedded using text-embedding-3-large and clustered by semantic similarity (0.7 cosine threshold). If 15 different customers ask about the same missing topic in different words, those gaps cluster together.
+
+3. **Autonomous article generation**: When a gap cluster reaches a threshold, the system automatically generates a draft article. It retrieves relevant conversation histories, fetches any existing related document chunks via RAG, and generates a full article with citations via LLM. The article goes through a two-stage pipeline (generation then evaluation) before entering a human review queue.
+
+4. **Human review workflow**: Support teams can accept, discard, edit, or reassign generated articles. Accepted articles flow back into the knowledge base, closing the gap.
+
+This creates a closed loop: customers ask questions → gaps are detected → articles are generated → knowledge base improves → future customers get better answers. The system runs continuously with daily cron jobs for auto-refresh and orphan cleanup.
+
+## Lessons Learned
+
+**Reranking is the highest-ROI investment in RAG quality.** If you're building RAG and you're not reranking, you're leaving quality on the table. The cost is minimal (Cohere charges per query, not per document) and the improvement is immediately measurable.
+
+**Chunk quality beats embedding model choice.** We spent weeks evaluating embedding models. We should have spent that time on chunking strategy and document enrichment. Switching from ada-002 to a newer embedding model might improve retrieval by 2-3%. Fixing your chunking to respect document structure improves it by 20%+.
+
+**Multi-modal enrichment is worth the complexity.** Tables and images are where most RAG systems fail. Customers paste screenshots into docs. They put critical information in tables. If your RAG can't handle these, you'll have a permanent quality ceiling that no amount of embedding model improvements will fix.
+
+**Build the feedback loop early.** Knowledge gap detection turned RAG from a static system into a self-improving one. The sooner you can identify what your system doesn't know, the sooner you can fix it.
+
+**Don't skip the boring infrastructure.** Auto-scaling enrichment, SQS visibility timeout extension for long-running extractions, concurrency control per organization, feature flags for extraction strategy overrides — none of this is exciting, but all of it is necessary for a system that serves real B2B customers with real SLAs.
+
+## The Numbers
+
+The system processes documents ranging from single-page FAQs to 500+ page technical manuals. The enrichment cluster handles burst loads by scaling to 128 concurrent tasks. Retrieval latency (vector search + reranking + hydration) runs in the hundreds of milliseconds. The knowledge gap system has generated thousands of article drafts, many of which have been accepted into customer knowledge bases.
+
+It's been running in production for two years, and the architecture — overfetch + rerank, element-aware chunking, contextual enrichment, autonomous gap detection — has scaled well as the product grew.
