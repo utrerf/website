@@ -74,7 +74,7 @@ This is not just prompt engineering. The tool availability itself is constrained
 
 The tool execution engine is its own service with a surprisingly rich feature set:
 
-**Connection tools** auto-discover OAuth API endpoints. When a customer connects their Zendesk instance, the system introspects the available API endpoints and generates tool definitions automatically. The LLM can then query Zendesk tickets, search Jira issues, or look up Salesforce records without any custom integration code per customer.
+**Connection tools** use curated API endpoint definitions per platform. Each integration (Zendesk, Jira, Confluence, Salesforce) has a set of pre-defined tool definitions describing the available actions and their schemas. When a customer connects their instance, the system links these definitions to the customer's credentials at runtime. The LLM can then query Zendesk tickets, search Jira issues, or look up Salesforce records without per-integration code.
 
 **Custom tools** let customers define their own HTTP endpoints as tools. The agent can call any REST API the customer configures, with schema validation on inputs and outputs.
 

@@ -1,11 +1,12 @@
 import 'nextra-theme-blog/style.css'
 import Head from 'next/head'
+import { ThemeProvider } from 'next-themes'
 
 import '../styles/main.css'
 
 export default function Nextra({ Component, pageProps }) {
   return (
-    <>
+    <ThemeProvider attribute="class" defaultTheme="dark">
       <Head>
         <link
           rel="alternate"
@@ -22,6 +23,6 @@ export default function Nextra({ Component, pageProps }) {
         />
       </Head>
       <Component {...pageProps} />
-    </>
+    </ThemeProvider>
   )
 }
