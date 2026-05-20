@@ -6,18 +6,18 @@ date: 2026-02-23
 
 # Francisco Utrera
 
-Principal AI Engineer at [Embrace.ai](https://embrace.ai/), where I own the AI stack end-to-end — architecture, implementation, and the long-term direction of how the product reasons over knowledge and takes action.
+I lead the AI stack at [Embrace.ai](https://embrace.ai/) — architecture, implementation, and the long-term direction of how the product reasons over knowledge and takes action.
 
-I designed and built Embrace's production inference layer from scratch: a multi-model pipeline routing across OpenAI, Claude, and Gemini behind a provider-agnostic SDK; ReAct agents driving an agentic tool execution framework with curated API definitions and automatic credential handling; a RAG system with vector search and semantic reranking; and a multi-modal document extraction pipeline. Within Embrace's broader platform, I'm the primary author of the AI core, knowledge intelligence, and document processing layers.
+I designed and built Embrace's production AI layer from scratch: agentic frameworks running ReAct loops over curated tool definitions with automatic credential handling and sandboxed code execution; a RAG system with vector search and semantic reranking; knowledge recommendations driven by gap detection across the corpus; and a multi-modal document extraction pipeline. Within Embrace's broader platform, I'm the primary author of the AI core, knowledge intelligence, and document processing layers.
 
 Before Embrace I worked on adversarial robustness and transfer learning research at UC Berkeley (3 papers — ICLR '21, ICLR '22, AISTATS '24), publishing work on how adversarially-trained networks transfer better to downstream tasks.
 
 ## What I Build
 
-- **LLM Orchestration** — Multi-model routing across OpenAI, Claude, and Gemini with provider-agnostic abstractions, type-safe tool definitions via Zod, and ReAct agent loops with automatic tool execution
+- **Agentic Frameworks** — ReAct agent loops with type-safe tool definitions via Zod, curated API endpoint definitions per platform (Zendesk, Jira, Confluence, Salesforce) with automatic credential handling, code sandbox execution via ECS Fargate, and citation tracking back to source documents. Runs behind a provider-agnostic SDK routing across OpenAI, Claude, and Gemini.
 - **RAG Architecture** — Embedding pipelines, Pinecone vector search with overfetch, Cohere semantic reranking, metadata hydration, and contextual document enrichment via Claude and Gemini
-- **Agentic Tool Execution** — Curated API endpoint definitions per platform (Zendesk, Jira, Confluence, Salesforce) with automatic credential handling. Code sandbox execution via ECS Fargate. Citation tracking back to source documents.
-- **Document Intelligence** — Multi-format extraction (PDF, DOCX, images, audio/video), intelligent strategy selection, LLM-powered enrichment with multi-modal element processing, and autonomous article generation from knowledge gaps
+- **Knowledge Recommendations** — Gap detection across the knowledge corpus and autonomous article generation to fill them, with citation tracking back to source materials
+- **Document Intelligence** — Multi-format extraction (PDF, DOCX, images, audio/video), intelligent strategy selection, and LLM-powered enrichment with multi-modal element processing
 - **Production Infrastructure** — AWS Lambda + ECS Fargate, SQS/SNS event-driven architecture, GraphQL federation across 68 microservices, Inngest durable workflows, Langfuse observability with per-model cost attribution
 
 ---
