@@ -4,7 +4,7 @@
         <description><![CDATA[Francisco Utrera]]></description>
         <link>https://www.franciscoutrera.com</link>
         <generator>RSS for Node</generator>
-        <lastBuildDate>Mon, 23 Feb 2026 10:10:11 GMT</lastBuildDate>
+        <lastBuildDate>Fri, 30 Oct 2026 15:18:55 GMT</lastBuildDate>
         <atom:link href="https://www.franciscoutrera.com/feed.xml" rel="self" type="application/rss+xml"/>
         <item>
             <title><![CDATA[Building Production LLM Orchestration from Scratch]]></title>
@@ -15,7 +15,7 @@
             <category><![CDATA[ai]]></category>
             <category><![CDATA[engineering]]></category>
             <dc:creator><![CDATA[Francisco Utrera]]></dc:creator>
-            <pubDate>Mon, 23 Feb 2026 10:00:00 GMT</pubDate>
+            <pubDate>Mon, 23 Feb 2026 05:00:00 GMT</pubDate>
         </item>
         <item>
             <title><![CDATA[Designing RAG at Scale]]></title>
@@ -26,7 +26,7 @@
             <category><![CDATA[ai]]></category>
             <category><![CDATA[engineering]]></category>
             <dc:creator><![CDATA[Francisco Utrera]]></dc:creator>
-            <pubDate>Mon, 23 Feb 2026 10:00:00 GMT</pubDate>
+            <pubDate>Mon, 23 Feb 2026 05:00:00 GMT</pubDate>
         </item>
         <item>
             <title><![CDATA[Empowering Internal Teams]]></title>
@@ -36,7 +36,7 @@
             <category><![CDATA[slack]]></category>
             <category><![CDATA[ai]]></category>
             <dc:creator><![CDATA[You]]></dc:creator>
-            <pubDate>Thu, 27 Jul 2023 10:00:00 GMT</pubDate>
+            <pubDate>Thu, 27 Jul 2023 04:00:00 GMT</pubDate>
         </item>
     </channel>
 </rss>
